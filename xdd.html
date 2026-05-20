@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>给你的一封信</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a1a, #1a1a2e, #16213e);
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 下雨效果 */
+        .rain {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .drop {
+            position: absolute;
+            top: -20px;
+            width: 1.5px;
+            height: 15px;
+            background: linear-gradient(transparent, rgba(174, 194, 224, 0.3));
+            border-radius: 0 0 2px 2px;
+            animation: rainFall linear infinite;
+        }
+        @keyframes rainFall {
+            0% { transform: translateY(-20px); opacity: 0.6; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        /* 开场 */
+        .intro {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #0a0a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+            transition: opacity 2s ease, visibility 2s ease;
+        }
+        .intro.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .intro-content {
+            text-align: center;
+            color: #a0b4c8;
+        }
+        .intro-line {
+            font-size: 18px;
+            opacity: 0;
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+        .intro-line:nth-child(1) { animation: softIn 2s ease 0.5s forwards; }
+        .intro-line:nth-child(2) { animation: softIn 2s ease 2s forwards; }
+        .intro-line:nth-child(3) { animation: softIn 2s ease 3.5s forwards; font-size: 14px; color: rgba(160,180,200,0.5); margin-top: 40px; animation-name: blink2; animation-delay: 4.5s; animation-duration: 1.5s; animation-iteration-count: infinite; }
+
+        @keyframes softIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink2 {
+            0%,100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        /* 主内容 */
+        .main {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            padding: 60px 20px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+        .main.show { opacity: 1; }
+
+        /* 信封动画 */
+        .envelope-section {
+            margin-bottom: 50px;
+            animation: floatSoft 3s ease-in-out infinite;
+        }
+        @keyframes floatSoft {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .envelope {
+            width: 80px;
+            height: 55px;
+            background: linear-gradient(135deg, #d4a574, #c49b6a);
+            border-radius: 4px;
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 5px 20px rgba(212,165,116,0.2);
+        }
+        .envelope::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-top: 30px solid #b8895c;
+        }
+        .envelope-label {
+            font-size: 13px;
+            color: rgba(160,180,200,0.6);
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* 道歉信 */
+        .letter {
+            max-width: 360px;
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(160,180,200,0.1);
+            border-radius: 20px;
+            padding: 35px 25px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+        .letter-title {
+            font-size: 20px;
+            color: #c8d8e8;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: normal;
+        }
+        .letter-body {
+            font-size: 15px;
+            color: #9ab0c4;
+            line-height: 2.2;
+            letter-spacing: 0.5px;
+        }
+        .letter-body p {
+            margin-bottom: 15px;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .letter-body p.visible {
+            animation: revealLine 1s ease forwards;
+        }
+        @keyframes revealLine {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .letter-sign {
+            text-align: right;
+            color: #7a9bb5;
+            font-size: 14px;
+            margin-top: 20px;
+            opacity: 0;
+        }
+        .letter-sign.visible {
+            animation: revealLine 1s ease 0.5s forwards;
+        }
+
+        /* 回忆碎片 */
+        .memories {
+            max-width: 360px;
+            width: 100%;
+            margin-bottom: 50px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+        .memories.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .memories-title {
+            font-size: 16px;
+            color: #7a9bb5;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .memory-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 18px 0;
+            padding: 15px;
+            background: rgba(160,180,200,0.04);
+            border-radius: 12px;
+            border-left: 3px solid rgba(160,180,200,0.2);
+        }
+        .memory-icon {
+            font-size: 22px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .memory-text {
+            font-size: 14px;
+            color: #8aa4b8;
+            line-height: 1.7;
+        }
+
+        /* 承诺 */
+        .promise-section {
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 50px;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        .promise-section.visible {
+            opacity: 1;
+        }
+        .promise-title {
+            font-size: 18px;
+            color: #a0b4c8;
+            margin-bottom: 25px;
+        }
+        .promise-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            font-size: 15px;
+            color: #8aa4b8;
+        }
+        .promise-check {
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid rgba(160,180,200,0.3);
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #6bbd8a;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .promise-check.checked {
+            opacity: 1;
+            border-color: #6bbd8a;
+        }
+
+        /* 最后的话 */
+        .final {
+            text-align: center;
+            margin-top: 30px;
+            opacity: 0;
+            transition: all 1.5s ease;
+        }
+        .final.visible { opacity: 1; }
+        .final-text {
+            font-size: 22px;
+            color: #c8d8e8;
+            font-weight: bold;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        .final-sub {
+            font-size: 14px;
+            color: rgba(160,180,200,0.5);
+        }
+
+        /* 选择按钮 */
+        .choice-section {
+            margin-top: 50px;
+            text-align: center;
+            opacity: 0;
+            transition: all 1s ease;
+        }
+        .choice-section.visible { opacity: 1; }
+        .choice-question {
+            font-size: 17px;
+            color: #a0b4c8;
+            margin-bottom: 25px;
+        }
+        .choice-btns {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-yes {
+            padding: 14px 40px;
+            border-radius: 30px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6bbd8a, #4a9e6b);
+            color: white;
+            box-shadow: 0 5px 20px rgba(107,189,138,0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-yes:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(107,189,138,0.4);
+        }
+        .btn-no {
+            padding: 14px 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(160,180,200,0.2);
+            font-size: 16px;
+            cursor: pointer;
+            background: transparent;
+            color: #7a9bb5;
+            transition: all 0.3s ease;
+        }
+
+        /* 结果页 */
+        .result {
+            display: none;
+            text-align: center;
+            margin-top: 40px;
+            animation: softIn 1s ease;
+        }
+        .result.show { display: block; }
+        .result-emoji {
+            font-size: 60px;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .result-text {
+            font-size: 18px;
+            color: #c8d8e8;
+            line-height: 1.8;
+        }
+
+        /* 萤火虫 */
+        .firefly {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 220, 150, 0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 220, 150, 0.4);
+            pointer-events: none;
+            z-index: 2;
+            animation: fireflyMove linear infinite;
+        }
+        @keyframes fireflyMove {
+            0% { transform: translate(0, 0); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.6; }
+            100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="rain" id="rain"></div>
+
+    <!-- 开场 -->
+    <div class="intro" id="intro">
+        <div class="intro-content">
+            <div class="intro-line">我知道你可能不想看到我的消息</div>
+            <div class="intro-line">但这些话 我还是想说给你听...</div>
+            <div class="intro-line">点击屏幕继续</div>
+        </div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main" id="main">
+        <!-- 信封 -->
+        <div class="envelope-section">
+            <div class="envelope"></div>
+            <div class="envelope-label">一封迟到的信</div>
+        </div>
+
+        <!-- 道歉信 -->
+        <div class="letter">
+            <div class="letter-title">写给你的话</div>
+            <div class="letter-body" id="letterBody">
+                <p>你好，是我。</p>
+                <p>我想了很久，还是决定把这些话说出来。不是为了打扰你，而是觉得有些事如果不说，我会一直遗憾。</p>
+                <p>对不起。</p>
+                <p>对不起让你失望了，对不起那些争吵里我说过的气话，对不起没有在你需要的时候好好理解你。</p>
+                <p>分开之后的每一天，我都在反复想，如果当时我能多一点耐心，少一点固执，是不是一切都会不一样。</p>
+                <p>我不是一个完美的人，但我愿意为了你去改变那些不好的部分。不是说说而已，是真的想做到。</p>
+                <p>我很想你。想你的笑，想你的声音，想和你在一起时那种安心的感觉。</p>
+            </div>
+            <div class="letter-sign" id="letterSign">—— 一个很想你的人</div>
+        </div>
+
+        <!-- 回忆 -->
+        <div class="memories" id="memories">
+            <div class="memories-title">那些我舍不得忘的瞬间</div>
+            <div class="memory-item">
+                <span class="memory-icon">🌅</span>
+                <span class="memory-text">第一次见面时你笑着看我的样子，我到现在都记得</span>
+            </div>
+            <div class="memory-item">
+                <span class="memory-icon">☂️</span>
+                <span class="memory-text">下雨天你把伞偏向我这边，自己肩膀却淋湿了</span>
+            </div>
+            <div class="memory-item">
+                <span class="memory-icon">🌙</span>
+                <span class="memory-text">深夜的电话，你困得不行还陪我聊到睡着</span>
+            </div>
+            <div class="memory-item">
+                <span class="memory-icon">🧣</span>
+                <span class="memory-text">冬天你把手放进我口袋里取暖的那个动作</span>
+            </div>
+        </div>
+
+        <!-- 承诺 -->
+        <div class="promise-section" id="promiseSection">
+            <div class="promise-title">如果你愿意再给我一次机会</div>
+            <div class="promise-item">
+                <span class="promise-check" id="check1">✓</span>
+                <span>我会学着控制情绪 不再冲你发脾气</span>
+            </div>
+            <div class="promise-item">
+                <span class="promise-check" id="check2">✓</span>
+                <span>我会认真倾听你说的每一句话</span>
+            </div>
+            <div class="promise-item">
+                <span class="promise-check" id="check3">✓</span>
+                <span>我会把你放在心上 而不只是嘴上</span>
+            </div>
+            <div class="promise-item">
+                <span class="promise-check" id="check4">✓</span>
+                <span>我会珍惜和你在一起的每一刻</span>
+            </div>
+        </div>
+
+        <!-- 最后 -->
+        <div class="final" id="final">
+            <p class="final-text">
+                我不奢求你马上原谅我<br>
+                只希望你知道<br>
+                我心里 从来没放下过你
+            </p>
+            <p class="final-sub">如果可以重来，我一定好好爱你</p>
+        </div>
+
+        <!-- 选择 -->
+        <div class="choice-section" id="choiceSection">
+            <p class="choice-question">愿意再给我一次机会吗？</p>
+            <div class="choice-btns">
+                <button class="btn-yes" id="btnYes">愿意 ❤️</button>
+                <button class="btn-no" id="btnNo">让我想想</button>
+            </div>
+            <div class="result" id="resultYes">
+                <div class="result-emoji">🥹💕</div>
+                <p class="result-text">谢谢你...<br>这次我一定不会让你失望<br>我们重新开始 好好走下去</p>
+            </div>
+            <div class="result" id="resultNo">
+                <div class="result-emoji">🌷</div>
+                <p class="result-text">没关系，我等你<br>不管多久<br>我都在这里</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ===== 雨滴 =====
+    function createRain() {
+        const rain = document.getElementById('rain');
+        for (let i = 0; i < 60; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'drop';
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDuration = (Math.random() * 1 + 0.8) + 's';
+            drop.style.animationDelay = Math.random() * 3 + 's';
+            drop.style.opacity = Math.random() * 0.3 + 0.1;
+            rain.appendChild(drop);
+        }
+    }
+
+    // ===== 萤火虫 =====
+    function createFireflies() {
+        setInterval(() => {
+            const ff = document.createElement('div');
+            ff.className = 'firefly';
+            ff.style.left = Math.random() * 100 + '%';
+            ff.style.top = Math.random() * 100 + '%';
+            ff.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+            ff.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+            ff.style.animationDuration = (Math.random() * 4 + 4) + 's';
+            document.body.appendChild(ff);
+            setTimeout(() => ff.remove(), 8000);
+        }, 600);
+    }
+
+    // ===== 信件逐段显示 =====
+    function revealLetter() {
+        const paragraphs = document.querySelectorAll('#letterBody p');
+        paragraphs.forEach((p, i) => {
+            setTimeout(() => p.classList.add('visible'), i * 800);
+        });
+        // 签名
+        setTimeout(() => {
+            document.getElementById('letterSign').classList.add('visible');
+        }, paragraphs.length * 800 + 500);
+        // 回忆
+        setTimeout(() => {
+            document.getElementById('memories').classList.add('visible');
+        }, paragraphs.length * 800 + 1500);
+        // 承诺
+        setTimeout(() => {
+            document.getElementById('promiseSection').classList.add('visible');
+            animateChecks();
+        }, paragraphs.length * 800 + 2500);
+        // 最后的话
+        setTimeout(() => {
+            document.getElementById('final').classList.add('visible');
+        }, paragraphs.length * 800 + 4000);
+        // 选择按钮
+        setTimeout(() => {
+            document.getElementById('choiceSection').classList.add('visible');
+        }, paragraphs.length * 800 + 5500);
+    }
+
+    // ===== 承诺打勾动画 =====
+    function animateChecks() {
+        const checks = ['check1', 'check2', 'check3', 'check4'];
+        checks.forEach((id, i) => {
+            setTimeout(() => {
+                document.getElementById(id).classList.add('checked');
+            }, i * 500);
+        });
+    }
+
+    // ===== 按钮交互 =====
+    document.getElementById('btnYes').addEventListener('click', function() {
+        document.querySelector('.choice-btns').style.display = 'none';
+        document.querySelector('.choice-question').style.display = 'none';
+        document.getElementById('resultYes').classList.add('show');
+        // 停雨 放晴
+        document.getElementById('rain').style.transition = 'opacity 2s';
+        document.getElementById('rain').style.opacity = '0';
+        document.body.style.transition = 'background 3s';
+        document.body.style.background = 'linear-gradient(135deg, #1a1a2e, #1e3a5f, #2d1b4e)';
+        celebrateHearts();
+    });
+
+    document.getElementById('btnNo').addEventListener('click', function() {
+        document.querySelector('.choice-btns').style.display = 'none';
+        document.querySelector('.choice-question').style.display = 'none';
+        document.getElementById('resultNo').classList.add('show');
+    });
+
+    // ===== 庆祝爱心 =====
+    function celebrateHearts() {
+        const emojis = ['❤️', '💕', '💖', '💗', '✨', '🌟'];
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => {
+                const el = document.createElement('div');
+                el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                el.style.cssText = `
+                    position: fixed;
+                    font-size: ${Math.random() * 20 + 15}px;
+                    left: ${Math.random() * 100}%;
+                    bottom: -30px;
+                    pointer-events: none;
+                    z-index: 999;
+                    animation: floatCelebrate ${Math.random() * 3 + 3}s ease-out forwards;
+                `;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 6000);
+            }, i * 100);
+        }
+
+        // 动态添加动画
+        if (!document.getElementById('celebrateStyle')) {
+            const style = document.createElement('style');
+            style.id = 'celebrateStyle';
+            style.textContent = `
+                @keyframes floatCelebrate {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    // ===== 开场 =====
+    document.getElementById('intro').addEventListener('click', function() {
+        this.classList.add('hidden');
+        setTimeout(() => {
+            document.getElementById('main').classList.add('show');
+            revealLetter();
+            createFireflies();
+        }, 1000);
+    });
+
+    // 初始化
+    createRain();
+    </script>
+</body>
+</html>
